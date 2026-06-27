@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Attendly · Login & Attendance</title>
+  <!-- Font Awesome 6 (free) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+
+    body {
+      background: #f4f7fc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---------- LOGIN PAGE (full screen) ---------- */
+    #loginPage {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: #f4f7fc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    #loginPage.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 40px;
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,20,50,0.12);
+      text-align: center;
+    }
+
+    .login-container .logo {
+      font-size: 48px;
+      color: #2a6df4;
+      margin-bottom: 8px;
+    }
+
+    .login-container h2 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #1e2a4a;
+      margin-bottom: 4px;
+    }
+
+    .login-container .sub {
+      color: #5e6f8b;
+      font-size: 15px;
+      margin-bottom: 24px;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 16px 18px;
+      border: 1px solid #d9e1ec;
+      border-radius: 20px;
+      font-size: 16px;
+      margin-bottom: 16px;
+      outline: none;
+      transition: 0.15s;
+      background: #fafcff;
+    }
+
+    .login-container input:focus {
+      border-color: #2a6df4;
+      box-shadow: 0 0 0 3px rgba(42,109,244,0.12);
+    }
+
+    .login-container .btn-login {
+      background: #2a6df4;
+      border: none;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 16px;
+      width: 100%;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 6px 16px rgba(42,109,244,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .login-container .btn-login:active {
+      transform: scale(0.97);
+    }
+
+    .login-container .btn-login:hover {
+      background: #1a5adf;
+    }
+
+    .login-error {
+      color: #d32f2f;
+      font-size: 14px;
+      margin-top: 10px;
+      min-height: 24px;
+    }
+
+    /* ---------- ATTENDANCE APP (hidden until login) ---------- */
+    #appContainer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease;
+    }
+
+    #appContainer.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* ----- TOP BAR ----- */
+    .topbar {
+      background: #1e2a4a;
+      color: white;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .burger-btn {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 26px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      transition: background 0.2s;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .burger-btn:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
+    .topbar h1 {
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      flex: 1;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-badge {
+      background: rgba(255,255,255,0.10);
+      padding: 5px 14px 5px 10px;
+      border-radius: 40px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: default;
+    }
+
+    .user-badge i {
+      font-size: 14px;
+      color: #7bb3ff;
+    }
+
+    .user-badge .user-name {
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-logout {
+      background: rgba(255,255,255,0.08);
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .btn-logout:hover {
+      background: rgba(255,70,70,0.25);
+    }
+
+    .badge-location {
+      background: rgba(255,255,255,0.08);
+      padding: 5px 12px;
+      border-radius: 40px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .badge-location i {
+      font-size: 12px;
+      color: #7bb3ff;
+    }
+
+    .loc-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4caf50;
+      margin-right: 2px;
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    .loc-dot.inactive {
+      background: #f44336;
+      animation: none;
+    }
+
+    @keyframes pulse-dot {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ----- DRAWER ----- */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      max-width: 80vw;
+      height: 100%;
+      background: white;
+      z-index: 50;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+      padding: 24px 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #e9edf4;
+      margin-bottom: 22px;
+    }
+
+    .drawer-header h2 {
+      font-size: 21px;
+      font-weight: 600;
+      color: #1e2a4a;
+    }
+
+    .drawer-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #7f8b9f;
+      cursor: pointer;
+      padding: 0 6px;
+    }
+
+    .drawer-close:hover {
+      color: #1e2a4a;
+    }
+
+    .drawer-section {
+      margin-bottom: 28px;
+    }
+
+    .drawer-section h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: #8d99ae;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .drawer-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      margin-bottom: 2px;
+      color: #1e2a4a;
+      font-weight: 500;
+      transition: background 0.12s;
+      cursor: default;
+    }
+
+    .drawer-item i {
+      width: 22px;
+      font-size: 17px;
+      color: #3d4f6f;
+    }
+
+    .drawer-item:hover {
+      background: #f0f4fe;
+    }
+
+    .drawer-item .badge {
+      margin-left: auto;
+      background: #eef2f9;
+      padding: 2px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #1e2a4a;
+    }
+
+    .drawer-footer {
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px solid #e9edf4;
+      font-size: 13px;
+      color: #7f8b9f;
+    }
+
+    .drawer-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 12px;
+      background: #f0f4fe;
+      border-radius: 16px;
+      margin-bottom: 18px;
+    }
+
+    .drawer-user i {
+      font-size: 24px;
+      color: #2a6df4;
+    }
+
+    .drawer-user .drawer-user-info {
+      flex: 1;
+    }
+
+    .drawer-user .drawer-user-name {
+      font-weight: 600;
+      color: #1e2a4a;
+    }
+
+    .drawer-user .drawer-user-role {
+      font-size: 13px;
+      color: #5e6f8b;
+    }
+
+    /* ----- MAIN CONTENT ----- */
+    .container {
+      max-width: 600px;
+      margin: 20px auto 30px;
+      padding: 0 18px 30px;
+      width: 100%;
+      flex: 1;
+    }
+
+    .card {
+      background: white;
+      border-radius: 28px;
+      padding: 24px 20px;
+      box-shadow: 0 8px 28px rgba(0,20,50,0.05);
+      margin-bottom: 22px;
+      border: 1px solid #eef2f9;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1e2a4a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title i {
+      color: #2a6df4;
+    }
+
+    .sub-text {
+      color: #5e6f8b;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .location-box {
+      background: #f8faff;
+      border-radius: 18px;
+      padding: 16px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid #e5ebf5;
+      margin-bottom: 20px;
+    }
+
+    .location-box i {
+      font-size: 22px;
+      color: #2a6df4;
+      width: 34px;
+      text-align: center;
+    }
+
+    .location-box .loc-text {
+      flex: 1;
+      font-size: 15px;
+      color: #1e2a4a;
+      word-break: break-word;
+    }
+
+    .location-box .loc-text small {
+      display: block;
+      font-size: 12px;
+      color: #7f8b9f;
+      margin-top: 2px;
+    }
+
+    .btn-punch {
+      background: #2a6df4;
+      border: none;
+      color: white;
+      font-size: 17px;
+      font-weight: 600;
+      padding: 15px;
+      width: 100%;
+      border-radius: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 6px 14px rgba(42,109,244,0.25);
+      cursor: pointer;
+    }
+
+    .btn-punch:active {
+      transform: scale(0.97);
+    }
+
+    .btn-punch i {
+      font-size: 18px;
+    }
+
+    .btn-punch.punched {
+      background: #1e7b4c;
+      box-shadow: 0 6px 14px rgba(30,123,76,0.25);
+    }
+
+    .btn-punch:disabled {
+      opacity: 0.6;
+      transform: none;
+      pointer-events: none;
+    }
+
+    .punch-status {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 14px;
+      color: #3d4f6f;
+    }
+
+    .punch-status i {
+      margin-right: 6px;
+    }
+
+    .employee-list {
+      margin-top: 6px;
+    }
+
+    .employee-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f4fc;
+    }
+
+    .employee-item:last-child {
+      border-bottom: none;
+    }
+
+    .employee-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 40px;
+      background: #eef3fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2a6df4;
+      font-weight: 600;
+      font-size: 17px;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+
+    .employee-info {
+      flex: 1;
+    }
+
+    .employee-name {
+      font-weight: 600;
+      color: #1e2a4a;
+    }
+
+    .employee-role {
+      font-size: 13px;
+      color: #7f8b9f;
+    }
+
+    .employee-status {
+      font-size: 12px;
+      background: #e9f2f9;
+      padding: 3px 12px;
+      border-radius: 30px;
+      color: #1e2a4a;
+      font-weight: 500;
+    }
+
+    .employee-status.present {
+      background: #daf1e4;
+      color: #0d6832;
+    }
+
+    .add-employee-btn {
+      background: transparent;
+      border: 1px dashed #b7c7e0;
+      border-radius: 60px;
+      padding: 11px;
+      width: 100%;
+      margin-top: 14px;
+      font-weight: 500;
+      color: #2a6df4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: 0.15s;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .add-employee-btn:hover {
+      background: #f0f6ff;
+      border-color: #2a6df4;
+    }
+
+    @media (max-width: 480px) {
+      .topbar h1 { font-size: 17px; }
+      .badge-location { font-size: 11px; padding: 4px 10px; }
+      .user-badge { font-size: 12px; padding: 4px 10px; }
+      .btn-logout { font-size: 12px; padding: 4px 12px; }
+      .card { padding: 18px 14px; }
+      .login-container { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LOGIN PAGE ===== -->
+  <div id="loginPage">
+    <div class="login-container">
+      <div class="logo"><i class="fas fa-fingerprint"></i></div>
+      <h2>Attendly</h2>
+      <div class="sub">Sign in to track your attendance</div>
+      <input type="text" id="loginNameInput" placeholder="Enter your full name" autofocus>
+      <button class="btn-login" id="loginBtn">
+        <i class="fas fa-sign-in-alt"></i> Login
+      </button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+
+  <!-- ===== ATTENDANCE APP ===== -->
+  <div id="appContainer">
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <button class="burger-btn" id="burgerBtn" aria-label="Open menu">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h1>Attendly</h1>
+      <div class="topbar-actions">
+        <div class="badge-location" id="locationBadge">
+          <span class="loc-dot" id="locDot"></span>
+          <i class="fas fa-map-pin"></i>
+          <span id="locationStatus">locating...</span>
+        </div>
+        <div class="user-badge" id="userBadge">
+          <i class="fas fa-user-circle"></i>
+          <span class="user-name" id="userNameDisplay">User</span>
+        </div>
+        <button class="btn-logout" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- DRAWER -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <nav class="drawer" id="drawerMenu">
+      <div class="drawer-header">
+        <h2>Menu</h2>
+        <button class="drawer-close" id="drawerCloseBtn" aria-label="Close menu">&times;</button>
+      </div>
+      <div class="drawer-user" id="drawerUser">
+        <i class="fas fa-user-circle"></i>
+        <div class="drawer-user-info">
+          <div class="drawer-user-name" id="drawerUserName">User</div>
+          <div class="drawer-user-role" id="drawerUserRole">Logged in</div>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <h3>Employees</h3>
+        <div class="drawer-item">
+          <i class="fas fa-users"></i>
+          <span>All employees</span>
+          <span class="badge" id="empCountBadge">0</span>
+        </div>
+        <div class="drawer-item" id="addEmployeeDrawerBtn">
+          <i class="fas fa-user-plus"></i>
+          <span>Add employee</span>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <h3>Attendance</h3>
+        <div class="drawer-item">
+          <i class="fas fa-clock"></i>
+          <span>Today's punches</span>
+          <span class="badge" id="todayPunchBadge">0</span>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <i class="fas fa-satellite-dish" style="margin-right: 6px;"></i> Realtime location
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+      <div class="card">
+        <div class="card-title">
+          <i class="fas fa-fingerprint"></i> Punch in / out
+        </div>
+        <div class="sub-text">Your live location is attached to every punch</div>
+        <div class="location-box">
+          <i class="fas fa-location-dot"></i>
+          <div class="loc-text" id="locationDisplay">
+            <span>🌐 Acquiring GPS...</span>
+            <small>latitude, longitude</small>
+          </div>
+        </div>
+        <button class="btn-punch" id="punchBtn">
+          <i class="fas fa-check-circle"></i> Punch in
+        </button>
+        <div class="punch-status" id="punchStatus">
+          <i class="fas fa-info-circle"></i> Ready
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <i class="fas fa-user-group"></i> Employees
+          <span style="margin-left: auto; font-size:14px; font-weight:400; color:#5e6f8b;" id="employeeCount">0</span>
+        </div>
+        <div class="employee-list" id="employeeList">
+          <!-- empty by default, no demo employees -->
+        </div>
+        <button class="add-employee-btn" id="addEmployeeBtn">
+          <i class="fas fa-plus-circle"></i> Add employee
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      "use strict";
+
+      // ---------- STATE (empty employees - no demo data) ----------
+      let employees = []; // start empty
+      let punchHistory = [];
+      let isPunchedIn = false;
+      let currentPosition = null;
+      let watchId = null;
+      let currentUser = null; // { name: string }
+
+      // DOM refs - Login
+      const loginPage = document.getElementById('loginPage');
+      const loginNameInput = document.getElementById('loginNameInput');
+      const loginBtn = document.getElementById('loginBtn');
+      const loginError = document.getElementById('loginError');
+
+      // DOM refs - App
+      const appContainer = document.getElementById('appContainer');
+      const userNameDisplay = document.getElementById('userNameDisplay');
+      const drawerUserName = document.getElementById('drawerUserName');
+      const drawerUserRole = document.getElementById('drawerUserRole');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      const burgerBtn = document.getElementById('burgerBtn');
+      const drawerOverlay = document.getElementById('drawerOverlay');
+      const drawerMenu = document.getElementById('drawerMenu');
+      const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+      const locationStatus = document.getElementById('locationStatus');
+      const locationDisplay = document.getElementById('locationDisplay');
+      const locDot = document.getElementById('locDot');
+      const punchBtn = document.getElementById('punchBtn');
+      const punchStatus = document.getElementById('punchStatus');
+      const employeeList = document.getElementById('employeeList');
+      const employeeCount = document.getElementById('employeeCount');
+      const empCountBadge = document.getElementById('empCountBadge');
+      const todayPunchBadge = document.getElementById('todayPunchBadge');
+      const addEmployeeBtn = document.getElementById('addEmployeeBtn');
+      const addEmployeeDrawerBtn = document.getElementById('addEmployeeDrawerBtn');
+
+      // ---------- LOCATION ----------
+      function updateLocationUI(position) {
+        let lat, lng;
+        if (position && position.coords) {
+          lat = position.coords.latitude;
+          lng = position.coords.longitude;
+        } else if (position && position.lat !== undefined) {
+          lat = position.lat;
+          lng = position.lng;
+        } else {
+          lat = null; lng = null;
+        }
+
+        if (lat !== null && lng !== null) {
+          currentPosition = { lat, lng };
+          locationDisplay.innerHTML = `
+            <span>📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}</span>
+            <small>live GPS (${new Date().toLocaleTimeString()})</small>
+          `;
+          locationStatus.textContent = 'live';
+          locDot.className = 'loc-dot';
+        } else {
+          locationDisplay.innerHTML = `<span>⚠️ No location</span><small>enable GPS</small>`;
+          locationStatus.textContent = 'no signal';
+          locDot.className = 'loc-dot inactive';
+        }
+      }
+
+      function startLocationWatch() {
+        if (!navigator.geolocation) {
+          locationStatus.textContent = 'unsupported';
+          locDot.className = 'loc-dot inactive';
+          return;
+        }
+        navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+          if (result.state === 'denied') {
+            locationStatus.textContent = 'denied';
+            locDot.className = 'loc-dot inactive';
+            locationDisplay.innerHTML = `<span>🚫 Location denied</span><small>allow in browser</small>`;
+            return;
+          }
+          watchId = navigator.geolocation.watchPosition(
+            (pos) => { updateLocationUI(pos); },
+            (err) => {
+              console.warn('Geolocation error:', err.message);
+              locationStatus.textContent = 'error';
+              locDot.className = 'loc-dot inactive';
+              navigator.geolocation.getCurrentPosition(
+                (p) => updateLocationUI(p),
+                () => {}
+              );
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+          );
+        }).catch(() => {
+          watchId = navigator.geolocation.watchPosition(
+            (pos) => { updateLocationUI(pos); },
+            () => {},
+            { enableHighAccuracy: true, timeout: 8000 }
+          );
+        });
+      }
+
+      function getLocationOnce() {
+        if (!navigator.geolocation) {
+          locationDisplay.innerHTML = `<span>⚠️ No GPS</span><small>not supported</small>`;
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            updateLocationUI(pos);
+            if (!watchId) startLocationWatch();
+          },
+          (err) => {
+            if (err.code === 1) {
+              locationDisplay.innerHTML = `<span>🚫 Permission denied</span><small>allow location</small>`;
+              locationStatus.textContent = 'denied';
+              locDot.className = 'loc-dot inactive';
+            } else {
+              const fallback = { lat: 40.7128, lng: -74.0060 };
+              updateLocationUI(fallback);
+              locationStatus.textContent = 'fallback';
+            }
+          },
+          { enableHighAccuracy: true, timeout: 6000 }
+        );
+      }
+
+      // ---------- RENDER ----------
+      function renderEmployees() {
+        if (!employeeList) return;
+        if (employees.length === 0) {
+          employeeList.innerHTML = `<div style="text-align:center;padding:20px 0;color:#8d99ae;">No employees yet. Add one below.</div>`;
+          employeeCount.textContent = '0';
+          empCountBadge.textContent = '0';
+          return;
+        }
+        let html = '';
+        employees.forEach(emp => {
+          const statusClass = emp.present ? 'present' : '';
+          const statusLabel = emp.present ? 'Punched' : 'Absent';
+          html += `
+            <div class="employee-item">
+              <div class="employee-avatar">${emp.name.charAt(0).toUpperCase()}</div>
+              <div class="employee-info">
+                <div class="employee-name">${emp.name}</div>
+                <div class="employee-role">${emp.role || 'Employee'}</div>
+              </div>
+              <span class="employee-status ${statusClass}">${statusLabel}</span>
+            </div>
+          `;
+        });
+        employeeList.innerHTML = html;
+        employeeCount.textContent = employees.length;
+        empCountBadge.textContent = employees.length;
+
+        const today = new Date().toDateString();
+        const todaysPunches = punchHistory.filter(p => new Date(p.timestamp).toDateString() === today);
+        todayPunchBadge.textContent = todaysPunches.length;
+      }
+
+      // ---------- USER UI ----------
+      function updateUserUI() {
+        if (currentUser) {
+          userNameDisplay.textContent = currentUser.name;
+          drawerUserName.textContent = currentUser.name;
+          drawerUserRole.textContent = 'Logged in';
+          punchBtn.disabled = false;
+        } else {
+          userNameDisplay.textContent = 'Guest';
+          drawerUserName.textContent = 'Guest';
+          drawerUserRole.textContent = 'Not logged in';
+          punchBtn.disabled = true;
+          punchStatus.innerHTML = `<i class="fas fa-lock"></i> Please login to punch`;
+        }
+      }
+
+      // ---------- PUNCH ----------
+      function handlePunch() {
+        if (!currentUser) {
+          punchStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Please login first`;
+          return;
+        }
+        if (!currentPosition) {
+          punchStatus.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> Waiting for GPS...`;
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              updateLocationUI(pos);
+              punchStatus.innerHTML = `<i class="fas fa-check-circle"></i> Location ready, punch again.`;
+            },
+            () => {
+              punchStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> No location. Enable GPS.`;
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+          );
+          return;
+        }
+
+        const action = isPunchedIn ? 'out' : 'in';
+        const record = {
+          id: Date.now(),
+          type: action,
+          timestamp: new Date().toISOString(),
+          location: { lat: currentPosition.lat, lng: currentPosition.lng },
+          userId: currentUser.name,
+        };
+        punchHistory.push(record);
+        isPunchedIn = !isPunchedIn;
+
+        if (isPunchedIn) {
+          punchBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Punch out`;
+          punchBtn.classList.add('punched');
+          punchStatus.innerHTML = `<i class="fas fa-check-circle" style="color:#1e7b4c;"></i> ${currentUser.name} punched in at ${new Date().toLocaleTimeString()}`;
+          // If there are employees, mark first as present (demo behavior)
+          if (employees.length > 0) employees[0].present = true;
+        } else {
+          punchBtn.innerHTML = `<i class="fas fa-check-circle"></i> Punch in`;
+          punchBtn.classList.remove('punched');
+          punchStatus.innerHTML = `<i class="fas fa-circle"></i> ${currentUser.name} punched out at ${new Date().toLocaleTimeString()}`;
+          if (employees.length > 0) employees[0].present = false;
+        }
+        renderEmployees();
+      }
+
+      // ---------- ADD EMPLOYEE ----------
+      function addEmployee(name, role) {
+        if (!name.trim()) return false;
+        const newEmp = {
+          id: Date.now(),
+          name: name.trim(),
+          role: role.trim() || 'Member',
+          present: false,
+        };
+        employees.push(newEmp);
+        renderEmployees();
+        return true;
+      }
+
+      // ---------- LOGIN / LOGOUT ----------
+      function performLogin(name) {
+        const trimmed = name.trim();
+        if (!trimmed) {
+          loginError.textContent = 'Please enter your name.';
+          return false;
+        }
+        currentUser = { name: trimmed };
+        loginError.textContent = '';
+        // Hide login page, show app
+        loginPage.classList.add('hidden');
+        appContainer.classList.add('visible');
+        updateUserUI();
+        // Start location after login
+        getLocationOnce();
+        renderEmployees();
+        punchStatus.innerHTML = `<i class="fas fa-check-circle"></i> Welcome, ${trimmed}!`;
+        return true;
+      }
+
+      function performLogout() {
+        // Reset punch state
+        if (isPunchedIn) {
+          isPunchedIn = false;
+          punchBtn.innerHTML = `<i class="fas fa-check-circle"></i> Punch in`;
+          punchBtn.classList.remove('punched');
+          if (employees.length > 0) employees[0].present = false;
+          renderEmployees();
+        }
+        currentUser = null;
+        if (watchId) {
+          navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+        }
+        // Show login page
+        appContainer.classList.remove('visible');
+        loginPage.classList.remove('hidden');
+        loginNameInput.value = '';
+        loginNameInput.focus();
+        loginError.textContent = '';
+        // Reset location display
+        locationDisplay.innerHTML = `<span>🌐 Acquiring GPS...</span><small>latitude, longitude</small>`;
+        locationStatus.textContent = 'locating...';
+        locDot.className = 'loc-dot inactive';
+        currentPosition = null;
+        updateUserUI();
+      }
+
+      // ---------- DRAWER ----------
+      function openDrawer() {
+        drawerMenu.classList.add('open');
+        drawerOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeDrawer() {
+        drawerMenu.classList.remove('open');
+        drawerOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      // ---------- INIT ----------
+      function init() {
+        // Show login page by default
+        loginPage.classList.remove('hidden');
+        appContainer.classList.remove('visible');
+        loginNameInput.focus();
+
+        // Login
+        loginBtn.addEventListener('click', () => {
+          performLogin(loginNameInput.value);
+        });
+        loginNameInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') performLogin(loginNameInput.value);
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', performLogout);
+
+        // Drawer
+        burgerBtn.addEventListener('click', openDrawer);
+        drawerOverlay.addEventListener('click', closeDrawer);
+        drawerCloseBtn.addEventListener('click', closeDrawer);
+
+        // Add employee (only when logged in)
+        const addEmpHandler = () => {
+          if (!currentUser) {
+            alert('Please login first to add employees.');
+            return;
+          }
+          const name = prompt('Enter employee name:');
+          if (name && name.trim()) {
+            const role = prompt('Enter role (optional):') || '';
+            addEmployee(name.trim(), role);
+          }
+        };
+
+        addEmployeeBtn.addEventListener('click', addEmpHandler);
+        addEmployeeDrawerBtn.addEventListener('click', () => {
+          closeDrawer();
+          setTimeout(addEmpHandler, 350);
+        });
+
+        // Punch
+        punchBtn.addEventListener('click', handlePunch);
+
+        // Cleanup        window.addEventListener('beforeunload', () => {
+          if (watchId) navigator.geolocation.clearWatch(watchId);
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            if (drawerMenu.classList.contains('open')) closeDrawer();
+          }
+        });
+
+        // Initial render (empty employees)
+        renderEmployees();
+        updateUserUI();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+    })();
+  </script>
+</body>
+</html>
