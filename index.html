@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Attendify · location permission</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: #f4f7fc;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .app-card {
+      max-width: 640px;
+      width: 100%;
+      background: white;
+      border-radius: 36px;
+      box-shadow: 0 20px 40px rgba(0, 20, 40, 0.12);
+      padding: 24px 20px 32px;
+      transition: 0.2s;
+    }
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 26px;
+      font-weight: 600;
+      color: #0b2b4a;
+      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+    }
+    h1 i {
+      color: #2a7de1;
+      font-size: 28px;
+    }
+    .subtitle {
+      color: #5e6f8d;
+      font-size: 14px;
+      margin-bottom: 24px;
+      border-left: 4px solid #2a7de1;
+      padding-left: 14px;
+      background: #f0f5fe;
+      border-radius: 0 12px 12px 0;
+      line-height: 1.4;
+    }
+    .permission-banner {
+      background: #eef3fa;
+      border-radius: 60px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 22px;
+      border: 1px solid #d6e2f0;
+    }
+    .permission-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+      font-size: 15px;
+      color: #1f3f62;
+    }
+    .permission-status i {
+      font-size: 20px;
+      width: 24px;
+      text-align: center;
+    }
+    .permission-status .granted { color: #1c8b4b; }
+    .permission-status .denied { color: #b13e3e; }
+    .permission-status .prompt { color: #b17d2a; }
+    .btn-location {
+      background: #2a7de1;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 8px 22px;
+      border-radius: 40px;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.15s;
+      box-shadow: 0 4px 10px rgba(42, 125, 225, 0.2);
+      letter-spacing: 0.3px;
+      border: 1px solid #2a7de1;
+    }
+    .btn-location:hover {
+      background: #1b62b5;
+      transform: scale(0.97);
+    }
+    .btn-location:disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: grayscale(0.3);
+    }
+    .btn-location.outline {
+      background: transparent;
+      color: #1f4a7a;
+      box-shadow: none;
+      border: 1px solid #b9cee8;
+    }
+    .btn-location.outline:hover {
+      background: #e4effa;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a3455;
+      margin: 24px 0 14px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid #e9eef4;
+      padding-bottom: 8px;
+    }
+    .section-title i {
+      color: #2a7de1;
+      font-size: 18px;
+    }
+    .employee-form {
+      background: #f9faff;
+      padding: 18px 16px;
+      border-radius: 24px;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.02);
+    }
+    .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .input-group input {
+      flex: 2 1 160px;
+      padding: 12px 16px;
+      border: 1px solid #d9e1ec;
+      border-radius: 40px;
+      font-size: 15px;
+      background: white;
+      transition: 0.15s;
+      outline: none;
+    }
+    .input-group input:focus {
+      border-color: #2a7de1;
+      box-shadow: 0 0 0 3px rgba(42, 125, 225, 0.2);
+    }
+    .input-group button {
+      flex: 1 0 auto;
+      background: #2a7de1;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 12px 22px;
+      border-radius: 40px;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.15s;
+      box-shadow: 0 6px 14px rgba(42, 125, 225, 0.25);
+      letter-spacing: 0.3px;
+    }
+    .input-group button:hover {
+      background: #1b62b5;
+      transform: scale(0.97);
+    }
+    .employee-list {
+      margin-top: 10px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .employee-item {
+      background: white;
+      border-radius: 20px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      border: 1px solid #eef3f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.1s;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .employee-item:hover {
+      border-color: #cbd9eb;
+    }
+    .emp-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 120px;
+    }
+    .emp-name {
+      font-weight: 600;
+      color: #0f2b47;
+      font-size: 16px;
+    }
+    .emp-id {
+      font-size: 12px;
+      color: #6f83a3;
+      background: #eef3f9;
+      padding: 2px 10px;
+      border-radius: 40px;
+      display: inline-block;
+      margin-top: 4px;
+      width: fit-content;
+    }
+    .punch-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .punch-btn {
+      border: none;
+      background: #edf3fa;
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: 0.1s;
+      color: #1f3f62;
+    }
+    .punch-btn i {
+      font-size: 14px;
+    }
+    .punch-btn.in {
+      background: #e2f0e6;
+      color: #11643c;
+    }
+    .punch-btn.in:hover {
+      background: #c2e0cc;
+    }
+    .punch-btn.out {
+      background: #ffe8e8;
+      color: #b13e3e;
+    }
+    .punch-btn.out:hover {
+      background: #fcd5d5;
+    }
+    .punch-btn:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+      filter: grayscale(0.3);
+    }
+    .status-badge {
+      font-size: 11px;
+      background: #eef3f9;
+      padding: 4px 12px;
+      border-radius: 40px;
+      color: #2f4b70;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .status-badge.in {
+      background: #c8e6d9;
+      color: #0b5530;
+    }
+    .status-badge.out {
+      background: #fcd9d9;
+      color: #a33636;
+    }
+    .location-panel {
+      background: #f2f8ff;
+      border-radius: 28px;
+      padding: 18px 18px 14px;
+      margin: 18px 0 8px;
+      border: 1px solid #dae6f5;
+    }
+    .location-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .location-coords {
+      font-size: 14px;
+      background: white;
+      padding: 8px 18px;
+      border-radius: 40px;
+      color: #1d3d63;
+      border: 1px solid #d0def0;
+      font-family: 'Menlo', monospace;
+      letter-spacing: 0.2px;
+      word-break: break-all;
+    }
+    .location-coords i {
+      color: #2a7de1;
+      margin-right: 6px;
+    }
+    .refresh-loc {
+      background: transparent;
+      border: 1px solid #b9cee8;
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1a4a7a;
+      cursor: pointer;
+      transition: 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+    }
+    .refresh-loc:hover {
+      background: #e4effa;
+      border-color: #2a7de1;
+    }
+    .clear-btn {
+      background: transparent;
+      border: 1px solid #d8dde6;
+      color: #546e8a;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.1s;
+      margin-top: 10px;
+    }
+    .clear-btn:hover {
+      background: #edf2f9;
+      border-color: #a0b5d0;
+    }
+    .footer-note {
+      font-size: 13px;
+      color: #6a7f9e;
+      text-align: center;
+      margin-top: 20px;
+      border-top: 1px solid #e7eef6;
+      padding-top: 18px;
+    }
+    .footer-note i {
+      color: #2a7de1;
+    }
+    .empty-message {
+      color: #7589aa;
+      font-size: 14px;
+      padding: 24px 0 14px;
+      text-align: center;
+      font-style: italic;
+    }
+    .employee-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .employee-list::-webkit-scrollbar-track {
+      background: #eef3f9;
+      border-radius: 10px;
+    }
+    .employee-list::-webkit-scrollbar-thumb {
+      background: #bccfe2;
+      border-radius: 10px;
+    }
+    .loc-permission-hint {
+      font-size: 12px;
+      color: #4a6e92;
+      background: #e6effa;
+      padding: 4px 14px;
+      border-radius: 40px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+<div class="app-card" id="app">
+  <h1><i class="fas fa-fingerprint"></i> Attendify</h1>
+  <div class="subtitle">
+    <i class="fas fa-map-pin" style="margin-right: 6px; color:#2a7de1;"></i> 
+    location‑based punch · permission aware
+  </div>
+
+  <!-- LOCATION PERMISSION BANNER -->
+  <div class="permission-banner" id="permissionBanner">
+    <div class="permission-status" id="permissionStatus">
+      <i class="fas fa-circle-exclamation" id="permIcon" style="color:#b17d2a;"></i>
+      <span id="permText">Checking permission…</span>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="btn-location" id="requestPermissionBtn"><i class="fas fa-location-crosshairs"></i> Request location</button>
+      <button class="btn-location outline" id="resetPermissionBtn"><i class="fas fa-rotate-left"></i> Reset</button>
+    </div>
+  </div>
+
+  <!-- Add employee -->
+  <div class="employee-form">
+    <div class="input-group">
+      <input type="text" id="employeeNameInput" placeholder="Full name, e.g. Jane Doe" autocomplete="name">
+      <button id="addEmployeeBtn"><i class="fas fa-user-plus"></i> Add</button>
+    </div>
+    <div style="margin-top: 6px; font-size: 12px; color:#5b7397; padding-left: 6px;">
+      <i class="fas fa-id-card"></i> auto‑generated ID
+    </div>
+  </div>
+
+  <!-- Location panel -->
+  <div class="location-panel">
+    <div class="location-row">
+      <span class="location-coords" id="locationDisplay"><i class="fas fa-satellite-dish"></i> fetching…</span>
+      <button class="refresh-loc" id="refreshLocationBtn"><i class="fas fa-location-crosshairs"></i> refresh</button>
+    </div>
+    <div style="font-size: 12px; margin-top: 10px; color:#3c5a7e; display: flex; gap: 10px; flex-wrap: wrap;">
+      <span><i class="fas fa-circle-check" style="color:#1d8b4b;"></i> punch‑in saves lat/lng</span>
+      <span><i class="fas fa-circle-check" style="color:#b13e3e;"></i> punch‑out saves location too</span>
+      <span id="permissionHint" class="loc-permission-hint"><i class="fas fa-info-circle"></i> permission: unknown</span>
+    </div>
+  </div>
+
+  <!-- Employee list -->
+  <div class="section-title"><i class="fas fa-users"></i> Employees <span style="font-size: 14px; font-weight: 400; margin-left: auto;" id="employeeCount">0</span></div>
+  <div class="employee-list" id="employeeListContainer">
+    <div class="empty-message"><i class="fas fa-user-slash"></i> No employees yet. Add one above.</div>
+  </div>
+
+  <!-- Clear all -->
+  <button class="clear-btn" id="clearAllBtn"><i class="fas fa-eraser"></i> Clear all data</button>
+  <div class="footer-note">
+    <i class="fas fa-location-dot"></i> punch records include live latitude & longitude
+  </div>
+</div>
+
+<script>
+  (function() {
+    "use strict";
+
+    // ----- state -----
+    let employees = [];          // { id, name, punches: [{ type, timestamp, lat, lng }] }
+    let currentLocation = { lat: null, lng: null };
+    let locationError = null;
+    let permissionState = 'prompt'; // 'prompt', 'granted', 'denied'
+
+    // DOM refs
+    const nameInput = document.getElementById('employeeNameInput');
+    const addBtn = document.getElementById('addEmployeeBtn');
+    const listContainer = document.getElementById('employeeListContainer');
+    const employeeCountSpan = document.getElementById('employeeCount');
+    const locationDisplay = document.getElementById('locationDisplay');
+    const refreshLocBtn = document.getElementById('refreshLocationBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    // permission UI
+    const permStatusDiv = document.getElementById('permissionStatus');
+    const permIcon = document.getElementById('permIcon');
+    const permText = document.getElementById('permText');
+    const requestPermBtn = document.getElementById('requestPermissionBtn');
+    const resetPermBtn = document.getElementById('resetPermissionBtn');
+    const permissionHint = document.getElementById('permissionHint');
+
+    // ----- helpers -----
+    function formatCoord(val) {
+      if (val === null || val === undefined) return '—';
+      return val.toFixed(6);
+    }
+
+    function formatTime(isoString) {
+      if (!isoString) return '';
+      const d = new Date(isoString);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function formatDate(isoString) {
+      if (!isoString) return '';
+      const d = new Date(isoString);
+      return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+
+    function generateId() {
+      return Math.random().toString(36).substring(2, 6).toUpperCase();
+    }
+
+    // ----- permission UI update -----
+    function updatePermissionUI() {
+      const state = permissionState;
+      if (state === 'granted') {
+        permIcon.className = 'fas fa-circle-check granted';
+        permText.textContent = 'Location allowed';
+        permissionHint.innerHTML = `<i class="fas fa-check-circle" style="color:#1c8b4b;"></i> granted`;
+        requestPermBtn.textContent = '✅ Allowed';
+        requestPermBtn.disabled = true;
+      } else if (state === 'denied') {
+        permIcon.className = 'fas fa-circle-xmark denied';
+        permText.textContent = 'Location denied';
+        permissionHint.innerHTML = `<i class="fas fa-ban" style="color:#b13e3e;"></i> denied`;
+        requestPermBtn.textContent = '🔒 Request again';
+        requestPermBtn.disabled = false;
+      } else { // prompt
+        permIcon.className = 'fas fa-circle-exclamation prompt';
+        permText.textContent = 'Permission not yet requested';
+        permissionHint.innerHTML = `<i class="fas fa-question-circle" style="color:#b17d2a;"></i> prompt`;
+        requestPermBtn.textContent = '📍 Request location';
+        requestPermBtn.disabled = false;
+      }
+      // update location display (if denied, show message)
+      if (state === 'denied') {
+        locationDisplay.innerHTML = `<i class="fas fa-ban" style="color:#b13e3e;"></i> location blocked by user`;
+      } else {
+        updateLocationDisplay();
+      }
+    }
+
+    // ----- location permission check (async) -----
+    function checkPermissionState() {
+      if (!navigator.permissions || !navigator.permissions.query) {
+        // fallback: try to infer from previous state or just prompt
+        // we keep current state
+        return Promise.resolve(permissionState);
+      }
+      return navigator.permissions.query({ name: 'geolocation' })
+        .then((status) => {
+          const state = status.state; // 'prompt', 'granted', 'denied'
+          permissionState = state;
+          updatePermissionUI();
+          if (state === 'granted') {
+            // if granted, fetch location
+            fetchLocation();
+          } else if (state === 'denied') {
+            currentLocation.lat = null;
+            currentLocation.lng = null;
+            locationError = 'denied';
+            updateLocationDisplay();
+          }
+          return state;
+        })
+        .catch(() => {
+          // permissions API not supported, keep current state
+          return permissionState;
+        });
+    }
+
+    // ----- request location permission (explicit) -----
+    function requestLocationPermission() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by this browser.');
+        return;
+      }
+      // actually request by calling getCurrentPosition
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          // granted
+          permissionState = 'granted';
+          currentLocation.lat = pos.coords.latitude;
+          currentLocation.lng = pos.coords.longitude;
+          locationError = null;
+          updatePermissionUI();
+          updateLocationDisplay();
+          // also update permission via query if available
+          if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' })
+              .then((status) => {
+                permissionState = status.state;
+                updatePermissionUI();
+              });
+          }
+        },
+        (err) => {
+          // if error is due to denied
+          if (err.code === 1) {
+            permissionState = 'denied';
+            currentLocation.lat = null;
+            currentLocation.lng = null;
+            locationError = 'denied';
+            updatePermissionUI();
+            updateLocationDisplay();
+          } else {
+            // other error (timeout, etc)
+            locationError = err.message || 'location error';
+            updateLocationDisplay();
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    // ----- reset permission (for testing) -----
+    function resetPermission() {
+      // we can't programmatically reset, but we can set state to prompt and clear location
+      permissionState = 'prompt';
+      currentLocation.lat = null;
+      currentLocation.lng = null;
+      locationError = null;
+      updatePermissionUI();
+      updateLocationDisplay();
+      // also try to clear any cached permission by asking again? 
+      // but we just update UI.
+      // also if permissions API supports, we can't revoke, but we can set UI.
+      // we also re-check
+      checkPermissionState();
+    }
+
+    // ----- location display update -----
+    function updateLocationDisplay() {
+      if (permissionState === 'denied') {
+        locationDisplay.innerHTML = `<i class="fas fa-ban" style="color:#b13e3e;"></i> location blocked`;
+        return;
+      }
+      if (locationError) {
+        locationDisplay.innerHTML = `<i class="fas fa-triangle-exclamation" style="color:#c44;"></i> ${locationError}`;
+        return;
+      }
+      if (currentLocation.lat !== null && currentLocation.lng !== null) {
+        locationDisplay.innerHTML = `<i class="fas fa-location-dot" style="color:#1e7b4a;"></i> ${formatCoord(currentLocation.lat)}, ${formatCoord(currentLocation.lng)}`;
+      } else {
+        locationDisplay.innerHTML = `<i class="fas fa-satellite-dish"></i> waiting for location…`;
+      }
+    }
+
+    // ----- fetch location (only if granted) -----
+    function fetchLocation() {
+      if (permissionState === 'denied') {
+        locationError = 'denied';
+        updateLocationDisplay();
+        return;
+      }
+      if (!navigator.geolocation) {
+        locationError = 'Geolocation not supported';
+        updateLocationDisplay();
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          currentLocation.lat = pos.coords.latitude;
+          currentLocation.lng = pos.coords.longitude;
+          locationError = null;
+          // ensure permission state is granted
+          if (permissionState !== 'granted') {
+            permissionState = 'granted';
+            updatePermissionUI();
+          }
+          updateLocationDisplay();
+        },
+        (err) => {
+          let msg = 'location unavailable';
+          if (err.code === 1) {
+            msg = 'denied by user';
+            permissionState = 'denied';
+            updatePermissionUI();
+          } else if (err.code === 2) msg = 'position unavailable';
+          else if (err.code === 3) msg = 'timeout';
+          locationError = msg;
+          currentLocation.lat = null;
+          currentLocation.lng = null;
+          updateLocationDisplay();
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    // ----- render employees (same as before) -----
+    function renderEmployees() {
+      if (!listContainer) return;
+      if (employees.length === 0) {
+        listContainer.innerHTML = `<div class="empty-message"><i class="fas fa-user-slash"></i> No employees yet. Add one above.</div>`;
+        employeeCountSpan.textContent = '0';
+        return;
+      }
+
+      let html = '';
+      employees.forEach((emp) => {
+        const lastPunch = emp.punches.length > 0 ? emp.punches[emp.punches.length - 1] : null;
+        let statusText = 'no punch';
+        let statusClass = '';
+        if (lastPunch) {
+          statusText = lastPunch.type === 'in' ? '🟢 IN' : '🔴 OUT';
+          statusClass = lastPunch.type === 'in' ? 'in' : 'out';
+        }
+        let lastLoc = '';
+        if (lastPunch && lastPunch.lat !== null && lastPunch.lng !== null) {
+          lastLoc = `📍 ${formatCoord(lastPunch.lat)}, ${formatCoord(lastPunch.lng)}`;
+        } else if (lastPunch) {
+          lastLoc = '📍 no location';
+        }
+
+        html += `
+          <div class="employee-item" data-id="${emp.id}">
+            <div class="emp-info">
+              <span class="emp-name">${escHtml(emp.name)}</span>
+              <span class="emp-id"><i class="far fa-id-badge"></i> ${emp.id}</span>
+              <div style="font-size: 11px; color: #46749b; margin-top: 3px;">
+                ${lastLoc ? lastLoc : '—'}
+              </div>
+              <div style="font-size: 11px; color: #4d6f92; margin-top: 2px;">
+                ${lastPunch ? formatDate(lastPunch.timestamp) + ' ' + formatTime(lastPunch.timestamp) : ''}
+              </div>
+            </div>
+            <div class="punch-actions">
+              <span class="status-badge ${statusClass}">${statusText}</span>
+              <button class="punch-btn in" data-action="in" data-id="${emp.id}"><i class="fas fa-sign-in-alt"></i> IN</button>
+              <button class="punch-btn out" data-action="out" data-id="${emp.id}"><i class="fas fa-sign-out-alt"></i> OUT</button>
+            </div>
+          </div>
+        `;
+      });
+
+      listContainer.innerHTML = html;
+      employeeCountSpan.textContent = employees.length;
+
+      document.querySelectorAll('.punch-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const empId = this.dataset.id;
+          const action = this.dataset.action;
+          if (!empId || !action) return;
+          handlePunch(empId, action);
+        });
+      });
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        if (m === '"') return '&quot;';
+        return m;
+      });
+    }
+
+    // ----- punch logic -----
+    function handlePunch(empId, type) {
+      const lat = currentLocation.lat;
+      const lng = currentLocation.lng;
+
+      // if location denied, we still allow but show warning
+      if (permissionState === 'denied' || lat === null || lng === null) {
+        if (!confirm(`⚠️ Location not available (permission ${permissionState}). Punch ${type.toUpperCase()} without location?`)) {
+          return;
+        }
+      }
+
+      const employee = employees.find(e => e.id === empId);
+      if (!employee) {
+        alert('Employee not found');
+        return;
+      }
+
+      employee.punches.push({
+        type: type,
+        timestamp: new Date().toISOString(),
+        lat: lat,
+        lng: lng
+      });
+
+      renderEmployees();
+      // auto-save
+      saveToLocal();
+    }
+
+    // ----- add employee -----
+    function addEmployee() {
+      const rawName = nameInput.value.trim();
+      if (!rawName) {
+        alert('Please enter employee name');
+        return;
+      }
+      const exists = employees.some(e => e.name.toLowerCase() === rawName.toLowerCase());
+      if (exists) {
+        alert(`Employee "${rawName}" already exists.`);
+        nameInput.value = '';
+        return;
+      }
+      employees.push({
+        id: generateId(),
+        name: rawName,
+        punches: []
+      });
+      nameInput.value = '';
+      renderEmployees();
+      saveToLocal();
+      if (listContainer) {
+        listContainer.scrollTop = listContainer.scrollHeight;
+      }
+    }
+
+    // ----- save / load -----
+    function saveToLocal() {
+      try {
+        localStorage.setItem('attendify_data', JSON.stringify(employees));
+      } catch (e) {}
+    }
+
+    function loadFromLocal() {
+      const saved = localStorage.getItem('attendify_data');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            employees = parsed;
+          }
+        } catch (e) {}
+      }
+    }
+
+    // ----- clear all -----
+    function clearAllData() {
+      if (employees.length === 0) {
+        alert('No data to clear.');
+        return;
+      }
+      if (confirm('Delete all employees and attendance records?')) {
+        employees = [];
+        renderEmployees();
+        saveToLocal();
+      }
+    }
+
+    // ----- init -----
+    function init() {
+      loadFromLocal();
+      // check permission
+      checkPermissionState().then(() => {
+        // if granted, fetch location
+        if (permissionState === 'granted') {
+          fetchLocation();
+        } else {
+          updateLocationDisplay();
+        }
+      }).catch(() => {
+        updateLocationDisplay();
+      });
+
+      renderEmployees();
+
+      // event listeners
+      addBtn.addEventListener('click', addEmployee);
+      nameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addEmployee(); });
+
+      refreshLocBtn.addEventListener('click', function() {
+        if (permissionState === 'denied') {
+          alert('Location permission denied. Please use "Request location" to allow.');
+          return;
+        }
+        fetchLocation();
+      });
+
+      clearAllBtn.addEventListener('click', clearAllData);
+
+      requestPermBtn.addEventListener('click', requestLocationPermission);
+      resetPermBtn.addEventListener('click', resetPermission);
+
+      // override render to save
+      const originalRender = renderEmployees;
+      renderEmployees = function() {
+        originalRender();
+        saveToLocal();
+      };
+      // re-run render to attach save
+      renderEmployees();
+
+      // periodic update
+      setInterval(() => {
+        if (permissionState === 'granted') {
+          // just update display, but don't spam location fetch
+          updateLocationDisplay();
+        }
+      }, 5000);
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
